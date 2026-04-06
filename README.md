@@ -1,8 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Analytics SDK + GTM Integration - Next.js Example
 
-## Getting Started
+This is a [Next.js](https://nextjs.org) example project demonstrating the Analytics SDK with **Google Tag Manager (GTM) integration**.
 
-First, run the development server:
+## 🚀 Features
+
+- ✅ Analytics SDK with GTM and CleverTap integration
+- ✅ Automatic GTM and CleverTap script loading
+- ✅ Events sent to HTTP endpoint, GTM dataLayer, and CleverTap
+- ✅ **Channel selection** - Send events to specific transports
+- ✅ User identification and session tracking
+- ✅ E-commerce event tracking examples
+- ✅ TypeScript support
+- ✅ Next.js 16 App Router
+
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- A Google Tag Manager account (optional for testing)
+- Analytics backend endpoint (or use the mock endpoint)
+
+## 🛠️ Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+# Google Tag Manager Container ID
+NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
+
+# Enable/Disable GTM (default: true)
+NEXT_PUBLIC_GTM_ENABLED=true
+
+# Analytics API endpoint (optional if using GTM-only)
+NEXT_PUBLIC_ANALYTICS_API_URL=https://api.example.com/track
+
+# Enable/Disable HTTP Backend (default: true)
+NEXT_PUBLIC_BACKEND_ENABLED=true
+```
+
+**Configuration Modes:**
+
+- **Both enabled** (default): Events sent to both HTTP backend and GTM
+- **GTM-only**: Set `NEXT_PUBLIC_BACKEND_ENABLED=false`
+- **Backend-only**: Set `NEXT_PUBLIC_GTM_ENABLED=false`
+
+**Replace `GTM-XXXXXXX` with your actual GTM Container ID.**
+
+### 3. Run the Development Server
 
 ```bash
 npm run dev
@@ -10,28 +65,210 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📖 How It Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Analytics Initialization
 
-## Learn More
+The analytics SDK is initialized in `lib/analytics.ts` with GTM configuration:
 
-To learn more about Next.js, take a look at the following resources:
+```typescript
+initAnalytics({
+  apiUrl: "http://localhost:8080/track",
+  gtm: {
+    gtmId: process.env.NEXT_PUBLIC_GTM_ID || "GTM-XXXXXXX",
+    enabled: true,
+    dataLayerName: "dataLayer", // Optional
+  },
+  debug: process.env.NODE_ENV === "development",
+});
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Tracking Events
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Events are tracked using the `track()` method:
 
-## Deploy on Vercel
+```typescript
+import { getAnalytics } from "analytics-js-sdk";
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+const analytics = getAnalytics();
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# example-next-js-analytics-sdk
+// Send to all enabled channels (default)
+analytics.track("purchase", {
+  order_id: "order_123",
+  total: 99.99,
+  currency: "USD",
+});
+
+// Send to specific channels only
+analytics.track("product_view", {
+  product_id: "prod_123"
+}, {
+  channels: ['gtm', 'clevertap']  // Only GTM and CleverTap
+});
+
+// Send to single channel
+analytics.track("page_view", {
+  page: "/home"
+}, {
+  channels: ['gtm']  // GTM only
+});
+```
+
+**Available channels:** `'backend'` | `'gtm'` | `'clevertap'`
+
+### Event Flow
+
+1. **Event tracked** → Analytics SDK
+2. **Sent to HTTP endpoint** → Your analytics backend
+3. **Pushed to GTM dataLayer** → Google Tag Manager
+4. **GTM processes** → Triggers, variables, and tags fire
+
+## 🎯 GTM Configuration
+
+### Setting Up Triggers
+
+1. Go to your GTM container
+2. Create a new trigger:
+   - **Trigger Type**: Custom Event
+   - **Event name**: `purchase` (or any event name you're tracking)
+3. Use this trigger to fire your tags
+
+### Creating Variables
+
+1. Create Data Layer Variables:
+   - **Variable Type**: Data Layer Variable
+   - **Data Layer Variable Name**: `order_id`, `total`, `currency`, etc.
+2. Use these variables in your tags
+
+### Example GTM Event Format
+
+When you track an event, it's pushed to `window.dataLayer` in this format:
+
+```javascript
+{
+  event: "purchase",
+  timestamp: 1234567890,
+  session_id: "sess_abc123",
+  user_id: "user_123", // If user is identified
+  order_id: "order_123",
+  total: 99.99,
+  currency: "USD"
+}
+```
+
+## 🧪 Testing
+
+### Verify GTM Events
+
+1. Open browser console
+2. Type `window.dataLayer` to see all events
+3. Look for your tracked events with their properties
+
+### GTM Preview Mode
+
+1. In GTM, click **Preview**
+2. Enter your localhost URL: `http://localhost:3000`
+3. Interact with the demo page
+4. See events fire in real-time in GTM debugger
+
+### Debug Mode
+
+In development, debug logs are automatically enabled:
+
+```bash
+[Analytics] GTM: Event pushed to dataLayer: {...}
+[Analytics] Event sent successfully
+```
+
+## 📂 Project Structure
+
+```button_clicked` - Track button clicks → **All channels**
+- `page_view` - Track page views → **GTM only**
+- `product_view` - Track product views → **GTM + CleverTap**
+- `add_to_cart` - Track add to cart actions → **CleverTap only**
+- `purchase` - Track completed purchases → **Backend + CleverTap**
+- `analytics_event` - Analytics tracking → **GTM only**
+- `user_engagement` - Engagement events → **CleverTap only**
+- `server_log` - Server-side logs → **Backend only**
+
+Each button in the demo shows which channels it uses!
+
+lib/
+└── analytics.ts        # Analytics SDK initialization
+
+public/                 # Static assets
+
+.env.local             # Environment variables (create this)
+package.json           # Dependencies
+tsconfig.json          # TypeScript config
+```
+
+## 📚 Available Events in Demo
+
+- `page_view` - Track page views
+- `button_clicked` - Track button clicks
+- `product_view` - Track product views
+- `add_to_cart` - Track add to cart actions
+- `purchase` - Track completed purchases
+
+## 🔍 Troubleshooting
+
+### GTM Not Loading
+
+- Check that `NEXT_PUBLIC_GTM_ID` is set correctly
+- Verify the GTM ID format: `GTM-XXXXXXX`
+- Check browser console for errors
+
+### Events Not Appearing in GTM
+
+- Ensure `enabled: true` in GTM config
+- Check `window.dataLayer` in console
+- Verify GTM container is published
+- Use GTM Preview mode to debug
+
+### TypeScript Errors
+
+- Ensure `analytics-js-sdk` is properly installed
+- Run `npm install` to install dependencies
+- Check that SDK types are exported correctly
+
+## 🚢 Deployment
+
+### Environment Variables
+
+Make sure to set environment variables in your deployment platform:
+
+- **Vercel**: Project Settings → Environment Variables
+- **Netlify**: Site Settings → Environment Variables
+- **Other**: Check your platform's documentation
+
+### Build
+
+```bash
+npm run build
+npm run start
+```Channel Selection Guide](CHANNEL_SELECTION.md) - Send events to specific channels
+- [GTM Setup Guide](GTM_GUIDE.md)
+- [CleverTap Setup Guide](CLEVERTAP_GUIDE.md)
+- [Backend Configuration](BACKEND_CONFIG.md)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Google Tag Manager](https://tagmanager.google.com/)
+- [GTM Developer Guide](https://developers.google.com/tag-platform/tag-manager)
+- [CleverTap Documentation](https://developer.clevertap.com/docs
+
+- [Analytics SDK Documentation](../../README.md)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Google Tag Manager](https://tagmanager.google.com/)
+- [GTM Developer Guide](https://developers.google.com/tag-platform/tag-manager)
+
+## 🤝 Contributing
+
+Feel free to submit issues and enhancement requests!
+
+## 📄 License
+
+MIT
