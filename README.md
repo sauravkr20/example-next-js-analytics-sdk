@@ -184,7 +184,67 @@ In development, debug logs are automatically enabled:
 [Analytics] Event sent successfully
 ```
 
-## 📂 Project Structure
+## � Cross-Domain Tracking
+
+### Testing with URL Parameters
+
+The SDK automatically detects user and session IDs from URL parameters, making it perfect for cross-domain tracking when users are redirected from your main site.
+
+#### Test in Browser
+
+Open this URL with tracking parameters:
+
+```
+http://localhost:3000/?user_id=user_abc123&session_id=sess_xyz789&utm_source=google&utm_medium=email&utm_campaign=newsletter_april&referrer=https://yoursite.com
+```
+
+#### Test with cURL
+
+```bash
+curl "http://localhost:3000/?user_id=user_abc123&session_id=sess_xyz789&utm_source=google&utm_medium=email&utm_campaign=newsletter_april&referrer=https://yoursite.com"
+```
+
+#### Run Test Script
+
+A convenience script is provided to test multiple scenarios:
+
+```bash
+./test-cross-domain.sh
+```
+
+This will open your browser with different URL parameter combinations to test various tracking scenarios.
+
+### Supported Parameters
+
+| Parameter | Aliases | Description | Example |
+|-----------|---------|-------------|---------|
+| User ID | `uid`, `user_id` | Unique user identifier | `user_abc123` |
+| Session ID | `sid`, `session_id` | Session identifier | `sess_xyz789` |
+| UTM Source | `utm_source` | Traffic source | `google`, `facebook` |
+| UTM Medium | `utm_medium` | Marketing medium | `cpc`, `email`, `social` |
+| UTM Campaign | `utm_campaign` | Campaign name | `spring_sale` |
+| UTM Term | `utm_term` | Keywords/terms | `luxury_jewelry` |
+| UTM Content | `utm_content` | Ad variation | `banner_a` |
+| Referrer | `ref`, `referrer` | Referring URL | `https://yoursite.com` |
+
+### What Gets Tracked
+
+When you visit with these parameters, the SDK automatically captures and includes in all events:
+
+- **User ID**: Persisted across sessions
+- **Session ID**: Maintains session continuity
+- **UTM Parameters**: Full marketing attribution
+- **Referrer Data**: Initial referrer URL and domain
+- **Landing Page**: First page visited
+- **Page View Count**: Number of pages in session
+
+All this data is automatically pushed to GTM's dataLayer for use with Google Analytics 4, Facebook Pixel, and Pinterest tags.
+
+### View Session Data
+
+Click the **"Load Session Info"** button on the demo page to see all captured tracking data including UTM parameters and referrer information.
+
+## �📂 Project Structure
 
 ```button_clicked` - Track button clicks → **All channels**
 - `page_view` - Track page views → **GTM only**

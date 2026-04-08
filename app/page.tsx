@@ -7,9 +7,33 @@ import { useState } from "react";
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
+  const [sessionInfo, setSessionInfo] = useState<{
+    sessionId?: string;
+    userId?: string;
+    pageViewCount?: number;
+    initialReferrer?: string;
+    referrerDomain?: string;
+    landingPage?: string;
+    utmParams?: Record<string, string>;
+  } | null>(null);
   
   // Channel selection state
   const [selectedChannels, setSelectedChannels] = useState<TransportChannel[]>(['backend', 'gtm', 'clevertap']);
+
+  const loadSessionInfo = () => {
+    const analytics = getAnalytics();
+    const sessionData = analytics.getSessionData();
+    const userId = analytics.getUserId();
+    const sessionId = analytics.getSessionId();
+    
+    setSessionInfo({
+      ...sessionData,
+      userId,
+      sessionId,
+    });
+    
+    addToLog('Session info loaded');
+  };
 
   const addToLog = (message: string) => {
     setEventLog((prev) => [...prev, `${new Date().toLocaleTimeString()} - ${message}`]);
@@ -225,6 +249,47 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Session Info */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">🔍 Session & Cross-Domain Tracking</h2>
+            <p className="text-gray-600 mb-4 text-xs">
+              View session data including UTM parameters, referrer info, and cross-domain tracking details.
+            </p>
+            <button
+              onClick={loadSessionInfo}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors mb-4"
+            >
+              Load Session Info
+            </button>
+            
+            {sessionInfo && (
+              <div className="bg-gray-50 rounded-lg p-4 text-xs font-mono space-y-2">
+                <div><span className="font-semibold">Session ID:</span> {sessionInfo.sessionId}</div>
+                {sessionInfo.userId && (
+                  <div><span className="font-semibold">User ID:</span> {sessionInfo.userId}</div>
+                )}
+                <div><span className="font-semibold">Page Views:</span> {sessionInfo.pageViewCount}</div>
+                {sessionInfo.initialReferrer && (
+                  <div><span className="font-semibold">Referrer:</span> {sessionInfo.initialReferrer}</div>
+                )}
+                {sessionInfo.referrerDomain && (
+                  <div><span className="font-semibold">Referrer Domain:</span> {sessionInfo.referrerDomain}</div>
+                )}
+                {sessionInfo.landingPage && (
+                  <div><span className="font-semibold">Landing Page:</span> {sessionInfo.landingPage}</div>
+                )}
+                {sessionInfo.utmParams && Object.keys(sessionInfo.utmParams).length > 0 && (
+                  <div className="border-t border-gray-200 pt-2 mt-2">
+                    <div className="font-semibold mb-1">UTM Parameters:</div>
+                    {Object.entries(sessionInfo.utmParams).map(([key, value]) => (
+                      <div key={key} className="ml-2">• {key}: {value as string}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Basic Tracking */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">📤 Basic Tracking</h2>
@@ -337,6 +402,49 @@ export default function Home() {
             <li>Set up tags to fire on your custom event triggers</li>
             <li>Test using GTM Preview mode</li>
           </ol>
+        </div>
+
+        {/* Cross-Domain Tracking Instructions */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">🔗 Cross-Domain Tracking</h2>
+          <p className="text-gray-600 mb-4">
+            When redirecting from your main site, automatically preserve user and session data using URL parameters:
+          </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <h3 className="font-semibold text-blue-900 mb-2">Try it now:</h3>
+            <p className="text-sm text-blue-800 mb-2">Add these parameters to the URL:</p>
+            <code className="bg-blue-900 text-blue-100 px-3 py-2 rounded block text-xs">
+              ?uid=user123&sid=session456&utm_source=google&utm_medium=cpc&utm_campaign=spring_sale
+            </code>
+          </div>
+
+          <div className="space-y-3 text-sm text-gray-700">
+            <div>
+              <span className="font-semibold">Supported Parameters:</span>
+              <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                <li><code className="bg-gray-100 px-2 py-0.5 rounded">uid</code> or <code className="bg-gray-100 px-2 py-0.5 rounded">user_id</code> - User identifier</li>
+                <li><code className="bg-gray-100 px-2 py-0.5 rounded">sid</code> or <code className="bg-gray-100 px-2 py-0.5 rounded">session_id</code> - Session identifier</li>
+                <li><code className="bg-gray-100 px-2 py-0.5 rounded">utm_*</code> - Marketing attribution (source, medium, campaign, etc.)</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <span className="font-semibold">Automatic Session Tracking:</span>
+              <p className="mt-1">The SDK automatically captures:</p>
+              <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                <li>UTM parameters from URL</li>
+                <li>Initial referrer and referrer domain</li>
+                <li>Landing page URL</li>
+                <li>Page view count per session</li>
+              </ul>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+              <span className="font-semibold text-green-900">GTM Integration:</span>
+              <p className="mt-1 text-green-800">All session data is automatically pushed to GTM&apos;s dataLayer, including e-commerce structured data for Facebook Pixel, Google Analytics 4, and Pinterest tags.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
