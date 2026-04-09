@@ -71,6 +71,9 @@ export default function Home() {
     analytics.track("button_clicked", {
       button_name: "test_button",
       page: "/",
+      wishlist_count: 2,
+      
+
     }, { channels: selectedChannels.length > 0 ? selectedChannels : undefined });
     addToLog(`Tracked: button_clicked → ${formatChannelsForLog(selectedChannels)}`);
   };
