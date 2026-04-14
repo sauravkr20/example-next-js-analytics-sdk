@@ -9,6 +9,7 @@ export default function PurchasePage() {
   const handlePushPurchase = () => {
     const payload = {
       ecommerce: {
+        currencyCode: "INR",
         transaction_id: "T12345",
         value: 1299.0,
         revenue: 1299.0,
@@ -17,6 +18,7 @@ export default function PurchasePage() {
         shipping: 50,
         purchase: {
           actionField:{
+            id: "T12345",
             revenue: 1299.0,
           }
         },

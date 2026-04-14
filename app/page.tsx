@@ -31,7 +31,7 @@ export default function Home() {
       userId,
       sessionId,
     });
-    
+
     addToLog('Session info loaded');
   };
 
